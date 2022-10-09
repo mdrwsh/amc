@@ -1,4 +1,5 @@
 from os import system, name as os
+from difflib import SequenceMatcher as diff
 
 try:
     import msvcrt
@@ -16,18 +17,9 @@ except ImportError:
             termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
         return answer
 
-keyVal = {
-  'g':0,'h':0,
-  't':-1,'y':1,'u':1,'j':1,'n':-1,'b':-1,'v':-1,'f':-1,
-  'r':-2,'d':-2,'c':-2,'i':2,'k':2,'m':-2,
-  'e':-3,'s':-3,'x':-3,'o':3,'l':3,
-  'w':-4,'a':-4,'z':-4,
-  'p':5,'q':-5, ' ':-1
-  }
-
 data = [i.split(',') for i in open("list.txt","r").read().split('\n')]
 if data[-1] == ['']: data.pop(-1)
-names = [i[0].lower() for i in data]
+names = [i[0] for i in data]
 text = ''
 
 while True:
@@ -38,14 +30,14 @@ while True:
         
     system("cls" if os == "nt" else "clear")
     print("\033[90mPress 0 for OPTIONS\n")
-    print(f"\033[32mIN: {c_in}\n\033[93mOUT: {c_out}\033[0m\n\nSearch:{text}\n")
+    print(f"\033[32mIN: {c_in}\n\033[93mOUT: {c_out}\033[0m\n\nSearch:{text}|\n")
     
     if text == '': result = []
     if result != []:
         for n,i in enumerate(result):
-            if data[i[1]][1] == "IN": print("\033[32m",end='')
+            if data[names.index(i)][1] == "IN": print("\033[32m",end='')
             else: print("\033[93m",end='')
-            print(f"{n+1}. {i[0]}")
+            print(f"{n+1}. {i}")
             
     char = getChar()
     if char == "0":
@@ -84,38 +76,19 @@ while True:
         char = int(char)
         if len(result) > 0:
             if char <= len(result):
-                data[result[char-1][1]][1] = "OUT" if data[result[char-1][1]][1] == "IN" else "IN"
+                data[names.index(result[char-1])][1] = "OUT" if data[names.index(result[char-1])][1] == "IN" else "IN"
         text = ''
         
     elif char.isalpha() or char in [" ","\x7f","\x08"]:
         if char in ['\x7f','\x08']: text = text[:-1]
         else: text += char
-        total = []
-        for word in names:
-            similarity = 53
-            for i in range(len(word)):
-                for y in range(len(word)+1):
-                    if i+y<=len(word) and i!=y+i:
-                        if word[i:i+y] in text: similarity += len(word[i:i+y])
-            similarity -= 2*abs(len(text)-len(word))
-            for i in range(min(len(text),len(word))):
-                try: similarity -= abs(keyVal[text[i]]-keyVal[word[i]])
-            total.append(similarity)
-        if max(total) > 50: 
-            score,word=[],[]
-            temp=sorted(zip(total,words), reverse=True)[:3]
-            for b,c in temp:
-                word.append(c)
-                for x in range(min(len(text),len(c))):
-                    if text[x] == c[x]: b+=10
-                score.append(b)
-            print(word[score.index(max(score))])
-        else: print(text)
-        # result = []
-        # c = 0
-        # for n,i in enumerate(data):
-            # name = i[0].lower()
-            # if text in name:
-                # result.append((i[0],n))
-                # c += 1
-                # if c == 9: break
+        # prob = [diff(None, text, i).ratio() + int(text in i) for i in names]
+        # result = [j for i,j in sorted(zip(prob,names), reverse=True)[:9]]
+        result = []
+        c = 0
+        for i in data:
+            name = i[0].lower()
+            if text.lower() in name:
+                result.append(i[0])
+                c += 1
+                if c == 9: break
