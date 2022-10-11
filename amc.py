@@ -1,4 +1,5 @@
-from os import system, name as os
+from os import system, path, makedirs, name as os
+from datetime import date, timedelta
 
 try:
     import msvcrt
@@ -16,8 +17,29 @@ except ImportError:
             termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
         return answer
 
+if not path.exists("amc.log"): makedirs("amc.log")
+
 data = [i.split(',') for i in open("list.txt","r").read().split('\n')]
 if data[-1] == ['']: data.pop(-1)
+last = data[0][0]
+data.pop(0)
+text = ''
+
+in_list = []
+out_list = []
+for i in data:
+    if i[1] == "IN": in_list.append(i[0])
+    else: out_list.append(i[0]+'\n')
+
+if str(date.today()) != last:
+    if len(out_list) > 0:
+        with open("amc.log/"+last+".txt", "w") as f:
+            f.writelines(out_list)
+        data = [[i[0],"IN"] for i in data]
+        
+wdata = [str(date.today())+'\n'] + [','.join(i)+'\n' for i in data]
+with open("list.txt","w") as f:
+    f.writelines(wdata)
 text = ''
 
 while True:
@@ -60,7 +82,7 @@ while True:
         if len(result) > 0:
             if char <= len(result):
                 data[result[char-1][1]][1] = "OUT" if data[result[char-1][1]][1] == "IN" else "IN"
-                wdata = [','.join(i)+'\n' for i in data]
+                wdata = [str(date.today())+'\n'] + [','.join(i)+'\n' for i in data]
                 with open("list.txt","w") as f:
                     f.writelines(wdata)
                 text = ''
@@ -68,8 +90,6 @@ while True:
     elif char.isalpha() or char in [" ","\x7f","\x08"]:
         if char in ['\x7f','\x08']: text = text[:-1]
         else: text += char
-        # prob = [diff(None, text, i).ratio() + int(text in i) for i in names]
-        # result = [j for i,j in sorted(zip(prob,names), reverse=True)[:9]]
         result = []
         c = 0
         for n,i in enumerate(data):
