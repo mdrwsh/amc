@@ -1,6 +1,8 @@
 from os import system, path, makedirs, name as os
 from datetime import date, timedelta
 
+print("Starting...")
+    
 try:
     import msvcrt
     def getChar():
@@ -19,11 +21,21 @@ except ImportError:
 
 if not path.exists("amc.log"): makedirs("amc.log")
 
+keyVal = {
+  'g':0,'h':0,
+  't':-1,'y':1,'u':1,'j':1,'n':-1,'b':-1,'v':-1,'f':-1,
+  'r':-2,'d':-2,'c':-2,'i':2,'k':2,'m':-2,
+  'e':-3,'s':-3,'x':-3,'o':3,'l':3,
+  'w':-4,'a':-4,'z':-4,
+  'p':5,'q':-5, ' ':-1
+  }
+  
 data = [i.split(',') for i in open("list.txt","r").read().split('\n')]
 if data[-1] == ['']: data.pop(-1)
 last = data[0][0]
 current = str(date.today())
 data.pop(0)
+names = [i[0].lower() for i in data]
 text = ''
 recent = 'N/A'
 
@@ -43,7 +55,7 @@ wdata = [current+'\n'] + [','.join(i)+'\n' for i in data]
 with open("list.txt","w") as f:
     f.writelines(wdata)
 text = ''
-
+    
 while True:
     c_in = c_out = 0
     for _,i in data:
@@ -92,12 +104,26 @@ while True:
         
     elif char.isalpha() or char in [" ","\x7f","\x08"]:
         if char in ['\x7f','\x08']: text = text[:-1]
-        else: text += char
-        result = []
-        c = 0
-        for n,i in enumerate(data):
-            name = i[0].lower()
-            if text.lower() in name:
-                result.append((i[0],n))
-                c += 1
-                if c == 9: break
+        else: text += char.lower()
+        prob = []
+        for name in names:
+            subname = []
+            for word in name.split():
+                if word[0] == "(": break
+                similarity = 100
+                if not text in word:
+                    similarity -= 2*abs(len(text)-len(word))
+                    for i in range(min(len(text),len(word))):
+                        try: similarity -= 5*abs(keyVal[text[i]]-keyVal[word[i]])
+                        except: pass
+                        try: similarity -= 5*abs(keyVal[text[-(i+1)]]-keyVal[word[-(i+1)]])
+                        except: pass
+                subname.append(similarity)
+            prob.append(max(subname))
+        result = sorted(zip(prob,range(len(data))), reverse=True)[:9]
+        for n,i in enumerate(result):
+            if i[0] < 60:
+                result = result[:n]
+                break
+        # result = [(names[i[1]]+f" ({i[0]}%)",i[1]) for i in result]
+        result = [(names[i[1]],i[1]) for i in result]
