@@ -1,10 +1,9 @@
 from os import system, path, makedirs, name as os
 from datetime import date, timedelta
 
-reload = True
 print("Starting...")
-
 if not path.exists("amc.log"): makedirs("amc.log")
+reload = True
 keyVal = {
           'g':0,'h':0,
           't':-1,'y':1,'u':1,'j':1,'n':-1,'b':-1,'v':-1,'f':-1,
@@ -13,7 +12,7 @@ keyVal = {
           'w':-4,'a':-4,'z':-4,
           'p':5,'q':-5, ' ':-1
           }
-
+          
 try:
     import msvcrt
     def getChar():
@@ -52,10 +51,9 @@ def config():
             if char in ['\x7f','\x08']: text = text[:-1]
             else: text += char.lower()
             result = []
-        
+    
 while True:
     if reload == True:
-    
         data = [i.split(',') for i in open("list.txt","r").read().split('\n')]
         if data[-1] == ['']: data.pop(-1)
         last = data[0][0]
